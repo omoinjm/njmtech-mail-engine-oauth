@@ -3,19 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailEngine.Core", "MailEngine.Core\MailEngine.Core.csproj", "{A97EAB17-A008-46CD-A1E2-94072FDCDE56}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailEngine.Core", "src\MailEngine.Core\MailEngine.Core.csproj", "{A97EAB17-A008-46CD-A1E2-94072FDCDE56}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailEngine.Providers.Gmail", "MailEngine.Providers.Gmail\MailEngine.Providers.Gmail.csproj", "{65BA6F2D-F346-4E59-9833-D75E419A7C6F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailEngine.Providers.Gmail", "src\MailEngine.Providers.Gmail\MailEngine.Providers.Gmail.csproj", "{65BA6F2D-F346-4E59-9833-D75E419A7C6F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailEngine.Providers.Outlook", "MailEngine.Providers.Outlook\MailEngine.Providers.Outlook.csproj", "{BF349040-8F95-4B22-B754-4295EA92089D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailEngine.Providers.Outlook", "src\MailEngine.Providers.Outlook\MailEngine.Providers.Outlook.csproj", "{BF349040-8F95-4B22-B754-4295EA92089D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailEngine.Infrastructure", "MailEngine.Infrastructure\MailEngine.Infrastructure.csproj", "{E8A4DE64-48D8-4361-80CE-A6E98BF1726E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailEngine.Infrastructure", "src\MailEngine.Infrastructure\MailEngine.Infrastructure.csproj", "{E8A4DE64-48D8-4361-80CE-A6E98BF1726E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailEngine.Tests.Unit", "MailEngine.Tests.Unit\MailEngine.Tests.Unit.csproj", "{DDA41825-7DE8-4EAD-BC9A-415BC10A9E75}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailEngine.Tests.Unit", "tests\MailEngine.Tests.Unit\MailEngine.Tests.Unit.csproj", "{DDA41825-7DE8-4EAD-BC9A-415BC10A9E75}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailEngine.Tests.Integration", "MailEngine.Tests.Integration\MailEngine.Tests.Integration.csproj", "{09FF2EF6-8B65-49F4-AA37-75C894AEF869}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailEngine.Tests.Integration", "tests\MailEngine.Tests.Integration\MailEngine.Tests.Integration.csproj", "{09FF2EF6-8B65-49F4-AA37-75C894AEF869}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailEngine.Functions", "MailEngine.Functions\MailEngine.Functions.csproj", "{AE695464-C52A-4699-9D5E-4FE31F4F9ED0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailEngine.Functions", "src\MailEngine.Functions\MailEngine.Functions.csproj", "{AE695464-C52A-4699-9D5E-4FE31F4F9ED0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
