@@ -13,17 +13,20 @@ Mail Engine is a headless backend system for sending and receiving emails at sca
 ### Key Features
 
 ✅ **Event-Driven Architecture**
+
 - Azure Service Bus Topics & Subscriptions
 - Asynchronous message processing
 - Dead-letter queue handling
 - Message deduplication
 
 ✅ **Multi-Provider Support**
+
 - Gmail API (Google Workspace)
 - Microsoft Graph (Office 365/Outlook)
 - Plugin-ready architecture for additional providers
 
 ✅ **Production-Ready**
+
 - Concurrency limiting (10 concurrent per provider)
 - Token lifecycle management
 - Key Vault integration for secrets
@@ -31,6 +34,7 @@ Mail Engine is a headless backend system for sending and receiving emails at sca
 - Structured logging with correlation IDs
 
 ✅ **Webhook Integration**
+
 - Google Pub/Sub push notifications
 - Microsoft Graph change notifications
 - Validation token handling
@@ -103,12 +107,14 @@ MailEngine.Providers.Outlook
 ### Local Development Setup
 
 1. **Clone the repository**
+
 ```bash
 git clone https://github.com/yourusername/mail-engine.git
 cd mail-engine
 ```
 
 2. **Set up PostgreSQL** (required for database)
+
 ```bash
 # macOS
 brew install postgresql
@@ -121,59 +127,57 @@ sudo apt install postgresql
 ```
 
 3. **Create local development database**
+
 ```bash
 createdb mail_engine_dev
 ```
 
 4. **Install dependencies**
+
 ```bash
 dotnet restore
 ```
 
 5. **Configure local settings**
-Create `src/MailEngine.Functions/local.settings.json`:
-```json
-{
-  "IsEncrypted": false,
-  "Values": {
-    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    "AzureServiceBus:ConnectionString": "Endpoint=sb://your-namespace.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=YOUR_KEY",
-    "KeyVault:Uri": "https://your-vault.vault.azure.net/",
-    "GMAIL_PUSH_VERIFICATION_TOKEN": "your-verification-token"
-  }
-}
-```
+   Create `src/MailEngine.Functions/local.settings.json`:
 
-Update `src/MailEngine.Functions/appsettings.Development.json`:
 ```json
 {
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5432;Database=mail_engine_dev;Username=postgres;Password=postgres"
-  },
-  "DatabaseProvider": "PostgreSQL"
+	"IsEncrypted": false,
+	"Values": {
+		"AzureWebJobsStorage": "UseDevelopmentStorage=true",
+		"FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+		"AzureServiceBus:ConnectionString": "Endpoint=sb://your-namespace.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=YOUR_KEY"
+	},
+	"ConnectionStrings": {
+		"DefaultConnection": "Host=localhost;Port=5432;Database=mail_engine_dev;Username=postgres;Password=postgres"
+	}
 }
 ```
 
 6. **Apply database migrations**
+
 ```bash
 cd src/MailEngine.Infrastructure
 dotnet ef database update --startup-project ../MailEngine.Functions
 ```
 
-For more details, see [SETUP_DATABASE.md](./SETUP_DATABASE.md).
+For more details, see [SETUP_DATABASE.md](./docs/SETUP_DATABASE.md).
 
 7. **Build the solution**
+
 ```bash
 dotnet build
 ```
 
 8. **Run tests**
+
 ```bash
 dotnet test
 ```
 
 9. **Start Azure Functions locally**
+
 ```bash
 cd src/MailEngine.Functions
 func start
@@ -200,19 +204,21 @@ dotnet ef migrations add YourMigrationName --startup-project ../MailEngine.Funct
 #### Applying Migrations
 
 **Local Development:**
+
 ```bash
 cd src/MailEngine.Infrastructure
 dotnet ef database update --startup-project ../MailEngine.Functions
 ```
 
 **Staging & Production:**
-Migrations are managed through GitHub Actions CI/CD pipeline. See [GITHUB_ACTIONS_MIGRATIONS.md](./GITHUB_ACTIONS_MIGRATIONS.md) for details.
+Migrations are managed through GitHub Actions CI/CD pipeline. See [GITHUB_ACTIONS_MIGRATIONS.md](./docs/GITHUB_ACTIONS_MIGRATIONS.md) for details.
 
-For comprehensive migration guide, see [MIGRATIONS.md](./MIGRATIONS.md).
+For comprehensive migration guide, see [MIGRATIONS.md](./docs/MIGRATIONS.md).
 
 ### Production Deployment
 
 1. **Build for release**
+
 ```bash
 dotnet build --configuration Release
 ```
@@ -222,17 +228,20 @@ dotnet build --configuration Release
    - Configure connection string in Key Vault
 
 3. **Publish to Azure**
+
 ```bash
 dotnet publish -c Release
 ```
 
 4. **Apply database migrations** (if not using GitHub Actions)
+
 ```bash
 cd src/MailEngine.Infrastructure
 dotnet ef database update --startup-project ../MailEngine.Functions
 ```
 
 5. **Deploy to Azure Functions**
+
 ```bash
 # Using Azure Functions Core Tools
 func azure functionapp publish your-function-app-name
@@ -327,17 +336,18 @@ Mail Engine stores all email events, tokens, and errors in PostgreSQL (with SQL 
 
 Mail Engine uses **manual migrations** (Option B) for safety:
 
-| Environment | Process | Control |
-|---|---|---|
-| **Local** | You create & apply migrations manually | Full control |
-| **Staging** | GitHub Actions auto-generates & auto-applies | Automated, no approval |
-| **Production** | GitHub Actions generates, you apply manually | Safe, reviewed |
+| Environment    | Process                                      | Control                |
+| -------------- | -------------------------------------------- | ---------------------- |
+| **Local**      | You create & apply migrations manually       | Full control           |
+| **Staging**    | GitHub Actions auto-generates & auto-applies | Automated, no approval |
+| **Production** | GitHub Actions generates, you apply manually | Safe, reviewed         |
 
 ### Initial Database Schema
 
 The **InitialCreate** migration creates three core tables:
 
 **1. OAuthTokens** (Credentials Storage)
+
 - `Id` (UUID) - Primary key
 - `UserMailAccountId` (UUID) - Link to user account
 - `AccessToken` (Text) - API access token for Gmail/Outlook
@@ -345,11 +355,13 @@ The **InitialCreate** migration creates three core tables:
 - `ExpiresAtUtc` (DateTime) - Expiration timestamp
 
 **2. UserMailAccounts** (User Information)
+
 - `Id` (UUID) - Primary key
 - `EmailAddress` (Text) - User's email address
 - `ProviderType` (Integer) - 0=Gmail, 1=Outlook
 
 **3. FailedMessages** (Error Tracking)
+
 - `Id`, `MessageId`, `Topic`, `Subscription`
 - `ErrorMessage`, `ErrorStackTrace` - Error details
 - `FailedAtUtc`, `ResolvedAtUtc` - Timestamps
@@ -391,102 +403,26 @@ See [SECURITY.md](./SECURITY.md) for error handling details.
 
 ### Setup Documentation
 
-| Document | Purpose |
-|---|---|
-| [SETUP_DATABASE.md](./SETUP_DATABASE.md) | First-time PostgreSQL setup (OS-specific instructions) |
-| [MIGRATIONS.md](./MIGRATIONS.md) | Complete migration guide and scenarios |
-| [GITHUB_ACTIONS_MIGRATIONS.md](./GITHUB_ACTIONS_MIGRATIONS.md) | CI/CD pipeline configuration and secrets |
-
-## ⚙️ Configuration
-
-### Application Settings
-
-Configure via `appsettings.json` or environment variables:
-
-```json
-{
-  "DatabaseProvider": "PostgreSQL",
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5432;Database=mail_engine_dev;Username=postgres;Password=postgres"
-  },
-  "AzureServiceBus": {
-    "ConnectionString": "Endpoint=sb://..."
-  },
-  "KeyVault": {
-    "Uri": "https://your-vault.vault.azure.net/"
-  },
-  "Providers": {
-    "Concurrency": {
-      "MaxPerProvider": 10
-    }
-  }
-}
-```
-
-### Database Configuration
-
-**Local Development** - Use `appsettings.Development.json`:
-```json
-{
-  "DatabaseProvider": "PostgreSQL",
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5432;Database=mail_engine_dev;Username=postgres;Password=postgres"
-  }
-}
-```
-
-**Production** - Use environment variables or Key Vault:
-```
-DatabaseProvider=PostgreSQL
-ConnectionStrings__DefaultConnection=Host=prod.example.com;Port=5432;Database=mail_engine;Username=dbuser;Password=secure_password
-```
-
-Supported databases:
-- `PostgreSQL` (recommended for staging/production)
-- `SqlServer` (fallback option)
-
-### Database Configuration
-
-**Local Development** - Use `appsettings.Development.json`:
-```json
-{
-  "DatabaseProvider": "PostgreSQL",
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5432;Database=mail_engine_dev;Username=postgres;Password=postgres"
-  }
-}
-```
-
-**Production** - Use environment variables or Key Vault:
-```
-DatabaseProvider=PostgreSQL
-ConnectionStrings__DefaultConnection=Host=prod.example.com;Port=5432;Database=mail_engine;Username=dbuser;Password=secure_password
-```
-
-Supported databases:
-- `PostgreSQL` (recommended for staging/production)
-- `SqlServer` (fallback option)
-
-### Required Secrets in Key Vault
-
-```
-gmail-api-key                    (Gmail API key)
-outlook-tenant-id               (Azure AD Tenant ID)
-outlook-client-id               (Azure AD Client ID)
-outlook-client-secret           (Azure AD Client Secret)
-```
+| Document                                                            | Purpose                                                |
+| ------------------------------------------------------------------- | ------------------------------------------------------ |
+| [SETUP_DATABASE.md](./docs/SETUP_DATABASE.md)                       | First-time PostgreSQL setup (OS-specific instructions) |
+| [MIGRATIONS.md](./docs/MIGRATIONS.md)                               | Complete migration guide and scenarios                 |
+| [GITHUB_ACTIONS_MIGRATIONS.md](./docs/GITHUB_ACTIONS_MIGRATIONS.md) | CI/CD pipeline configuration and secrets               |
 
 ### Service Bus Configuration
 
 **Topics to Create:**
+
 - `mail-send` - Email sending requests
 - `mail-inbox-read` - Inbox reading requests
 
 **Subscriptions:**
+
 - `mail-send` → `gmail`, `outlook`
 - `mail-inbox-read` → `gmail`, `outlook`
 
 **Settings:**
+
 - Enable duplicate detection (1 hour window)
 - Configure dead-letter queues
 - Set max delivery count to 3
@@ -494,17 +430,20 @@ outlook-client-secret           (Azure AD Client Secret)
 ## 🧪 Testing
 
 ### Run All Tests
+
 ```bash
 dotnet test
 ```
 
 ### Run Specific Test Project
+
 ```bash
 dotnet test tests/MailEngine.Tests.Unit
 dotnet test tests/MailEngine.Tests.Integration
 ```
 
 ### Run with Code Coverage
+
 ```bash
 dotnet test /p:CollectCoverage=true /p:CoverageFormat=opencover
 ```
@@ -514,6 +453,7 @@ dotnet test /p:CollectCoverage=true /p:CoverageFormat=opencover
 ### Application Insights
 
 Mail Engine logs to Application Insights with:
+
 - **Structured logging** - JSON format with correlation IDs
 - **Custom metrics** - Provider performance, message count
 - **Distributed tracing** - End-to-end request tracking
@@ -531,6 +471,7 @@ az monitor app-insights metrics show -g your-resource-group --app your-app-insig
 ## 🔐 Security
 
 See [SECURITY.md](./SECURITY.md) for:
+
 - Authentication and authorization
 - Token management
 - Secret rotation
@@ -539,6 +480,7 @@ See [SECURITY.md](./SECURITY.md) for:
 - Incident response
 
 **Quick Security Checklist:**
+
 - ✅ Secrets in Key Vault (never hardcoded)
 - ✅ Managed Identity for Azure services
 - ✅ HTTPS for all endpoints
@@ -548,18 +490,18 @@ See [SECURITY.md](./SECURITY.md) for:
 
 ## 📦 Project Status
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Core Infrastructure | ✅ Complete | Full DI, config, logging |
-| Email Sending | ✅ Complete | Gmail & Outlook |
-| Inbox Reading | ✅ Complete | Gmail & Outlook |
-| Webhook Support | ✅ Complete | Google & Microsoft |
-| Token Management | ⚠️ Partial | OAuth app stores/manages tokens, Mail Engine reads from DB |
-| Error Handling | ✅ Complete | DLQ monitoring, FailedMessage tracking, error classification |
-| Database | ✅ Complete | PostgreSQL + SQL Server support, migrations infrastructure |
-| Integration Tests | ⚠️ Partial | Test containers needed |
-| CI/CD Pipeline | ✅ Complete | GitHub Actions with staged migrations |
-| Documentation | ✅ Complete | README, SECURITY, MIGRATIONS, SETUP guides |
+| Component           | Status      | Notes                                                        |
+| ------------------- | ----------- | ------------------------------------------------------------ |
+| Core Infrastructure | ✅ Complete | Full DI, config, logging                                     |
+| Email Sending       | ✅ Complete | Gmail & Outlook                                              |
+| Inbox Reading       | ✅ Complete | Gmail & Outlook                                              |
+| Webhook Support     | ✅ Complete | Google & Microsoft                                           |
+| Token Management    | ⚠️ Partial  | OAuth app stores/manages tokens, Mail Engine reads from DB   |
+| Error Handling      | ✅ Complete | DLQ monitoring, FailedMessage tracking, error classification |
+| Database            | ✅ Complete | PostgreSQL + SQL Server support, migrations infrastructure   |
+| Integration Tests   | ⚠️ Partial  | Test containers needed                                       |
+| CI/CD Pipeline      | ✅ Complete | GitHub Actions with staged migrations                        |
+| Documentation       | ✅ Complete | README, SECURITY, MIGRATIONS, SETUP guides                   |
 
 ## 🤝 Contributing
 
@@ -570,6 +512,7 @@ See [SECURITY.md](./SECURITY.md) for:
 5. Open a Pull Request
 
 ### Development Guidelines
+
 - Follow C# coding standards (StyleCop)
 - Use async/await everywhere
 - Write unit tests for new logic
@@ -595,6 +538,7 @@ See [Issues](https://github.com/yourusername/mail-engine/issues) for more.
 ## 📋 Roadmap
 
 ### Q1 2025
+
 - [x] PostgreSQL database support with migrations
 - [x] Error handling with DLQ monitoring
 - [x] GitHub Actions CI/CD pipeline
@@ -602,12 +546,14 @@ See [Issues](https://github.com/yourusername/mail-engine/issues) for more.
 - [ ] Implement webhook signature validation
 
 ### Q2 2025
+
 - [ ] Add integration tests with test containers
 - [ ] Performance optimization
 - [ ] Additional email providers (ProtonMail, etc.)
 - [ ] Admin dashboard
 
 ### Q3 2025
+
 - [ ] Multi-tenant support
 - [ ] Advanced filtering and search
 - [ ] Batch operations
@@ -620,8 +566,9 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 ## 📞 Support
 
 For issues, questions, or suggestions:
-1. Check [existing issues](https://github.com/yourusername/mail-engine/issues)
-2. Open a [new issue](https://github.com/yourusername/mail-engine/issues/new)
+
+1. Check [existing issues](https://github.com/omoinjm/mail-engine/issues)
+2. Open a [new issue](https://github.com/omoinjm/mail-engine/issues/new)
 3. Contact the maintainers
 
 ## 🙏 Acknowledgments
@@ -629,7 +576,3 @@ For issues, questions, or suggestions:
 - Built with [Azure Functions](https://docs.microsoft.com/en-us/azure/azure-functions/)
 - Email APIs: [Gmail API](https://developers.google.com/gmail/api) and [Microsoft Graph](https://docs.microsoft.com/en-us/graph/)
 - Architecture inspired by event-driven systems best practices
-
----
-
-**Made with ❤️ for email automation**
