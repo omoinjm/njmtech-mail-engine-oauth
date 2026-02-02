@@ -113,11 +113,35 @@ public class OutlookMailProvider : IMailProvider
 
     private async Task<string> GetSecretAsync(string secretName, CancellationToken cancellationToken)
     {
+        // Try Key Vault first if configured
         if (_keyVaultProvider != null)
         {
-            return await _keyVaultProvider.GetSecretAsync(secretName, cancellationToken);
+            try
+            {
+                return await _keyVaultProvider.GetSecretAsync(secretName, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to retrieve secret '{SecretName}' from Key Vault, falling back to environment variables", secretName);
+            }
         }
 
-        throw new InvalidOperationException($"Key Vault provider not configured. Cannot retrieve secret: {secretName}");
+        // Fall back to environment variables
+        var envVarName = ConvertSecretNameToEnvVar(secretName);
+        var envValue = Environment.GetEnvironmentVariable(envVarName);
+        
+        if (!string.IsNullOrEmpty(envValue))
+        {
+            return envValue;
+        }
+
+        throw new InvalidOperationException(
+            $"Secret '{secretName}' not found. Either configure Key Vault or set environment variable '{envVarName}'");
+    }
+
+    private static string ConvertSecretNameToEnvVar(string secretName)
+    {
+        // Convert "outlook-tenant-id" to "OUTLOOK_TENANT_ID"
+        return secretName.ToUpper().Replace("-", "_");
     }
 }

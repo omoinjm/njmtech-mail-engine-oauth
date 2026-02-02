@@ -1,12 +1,21 @@
 {
-    "version": "2.0",
-    "logging": {
-        "applicationInsights": {
-            "samplingSettings": {
-                "isEnabled": true,
-                "excludedTypes": "Request"
-            },
-            "enableLiveMetricsFilters": true
-        }
+  "version": "2.0",
+  "functionTimeout": "00:05:00",
+  "logging": {
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true,
+        "excludedTypes": "Request"
+      },
+      "enableLiveMetricsFilters": true
     }
+  },
+  "extensions": {
+    "serviceBus": {
+      "maxAutoRenewDuration": "00:30:00",
+      "maxConcurrentCalls": 10,
+      "prefetchCount": 100,
+      "autoCompleteMessages": false
+    }
+  }
 }
