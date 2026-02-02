@@ -26,7 +26,8 @@ public class MailEngineDbContext : DbContext
 
         modelBuilder.Entity<OAuthToken>()
             .Property(t => t.OAuthTokenId)
-            .HasColumnName("oauth_token_id");
+            .HasColumnName("oauth_token_id")
+            .HasDefaultValueSql("gen_random_uuid()");
 
         modelBuilder.Entity<OAuthToken>()
             .Property(t => t.UserMailAccountId)
@@ -59,7 +60,8 @@ public class MailEngineDbContext : DbContext
 
         modelBuilder.Entity<UserMailAccount>()
             .Property(u => u.UserMailAccountId)
-            .HasColumnName("user_mail_account_id");
+            .HasColumnName("user_mail_account_id")
+            .HasDefaultValueSql("gen_random_uuid()");
 
         modelBuilder.Entity<UserMailAccount>()
             .Property(u => u.EmailAddressTxt)
@@ -88,7 +90,8 @@ public class MailEngineDbContext : DbContext
 
         modelBuilder.Entity<FailedMessage>()
             .Property(f => f.FailedMessageId)
-            .HasColumnName("failed_message_id");
+            .HasColumnName("failed_message_id")
+            .HasDefaultValueSql("gen_random_uuid()");
 
         modelBuilder.Entity<FailedMessage>()
             .Property(f => f.MessageIdTxt)
@@ -141,14 +144,14 @@ public class MailEngineDbContext : DbContext
         // Add indexes
         modelBuilder.Entity<FailedMessage>()
             .HasIndex(f => f.StatusCd)
-            .HasName("idx_failed_messages_status_cd");
+            .HasDatabaseName("idx_failed_messages_status_cd");
 
         modelBuilder.Entity<FailedMessage>()
             .HasIndex(f => f.TopicCd)
-            .HasName("idx_failed_messages_topic_cd");
+            .HasDatabaseName("idx_failed_messages_topic_cd");
 
         modelBuilder.Entity<FailedMessage>()
             .HasIndex(f => f.CreatedAtUtc)
-            .HasName("idx_failed_messages_created_at_utc");
+            .HasDatabaseName("idx_failed_messages_created_at_utc");
     }
 }

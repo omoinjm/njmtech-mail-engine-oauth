@@ -39,6 +39,7 @@ public class FailedMessageLogger : IFailedMessageLogger
         {
             var failedMessage = new FailedMessage
             {
+                MessageIdTxt = Guid.NewGuid().ToString(),
                 TopicCd = topic,
                 SubscriptionTxt = subscription,
                 ErrorMessageTxt = exception.Message,

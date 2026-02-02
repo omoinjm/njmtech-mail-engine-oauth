@@ -14,7 +14,7 @@ public class TokenRepository : ITokenRepository
         _context = context;
     }
 
-    public async Task<OAuthToken> GetTokenAsync(Guid userMailAccountId, CancellationToken cancellationToken = default)
+    public async Task<OAuthToken?> GetTokenAsync(Guid userMailAccountId, CancellationToken cancellationToken = default)
     {
         return await _context.OAuthTokens
             .FirstOrDefaultAsync(t => t.UserMailAccountId == userMailAccountId, cancellationToken);

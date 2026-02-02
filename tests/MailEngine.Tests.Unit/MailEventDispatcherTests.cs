@@ -9,10 +9,10 @@ namespace MailEngine.Tests.Unit;
 [TestClass]
 public class MailEventDispatcherTests
 {
-    private Mock<IMailProviderFactory> _mockFactory;
-    private Mock<IMailProvider> _mockProvider;
-    private ProviderConcurrencyLimiter _concurrencyLimiter;
-    private MailEventDispatcher _dispatcher;
+    private Mock<IMailProviderFactory>? _mockFactory;
+    private Mock<IMailProvider>? _mockProvider;
+    private ProviderConcurrencyLimiter? _concurrencyLimiter;
+    private MailEventDispatcher? _dispatcher;
 
     [TestInitialize]
     public void Setup()
@@ -37,13 +37,13 @@ public class MailEventDispatcherTests
             Body = "Test body"
         };
 
-        _mockFactory.Setup(f => f.GetProvider(ProviderType.Gmail)).Returns(_mockProvider.Object);
-        _mockProvider.Setup(p => p.SendEmailAsync(It.IsAny<SendMailEvent>(), It.IsAny<CancellationToken>()))
+        _mockFactory!.Setup(f => f.GetProvider(ProviderType.Gmail)).Returns(_mockProvider!.Object);
+        _mockProvider!.Setup(p => p.SendEmailAsync(It.IsAny<SendMailEvent>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        await _dispatcher.HandleEventAsync(mailEvent);
+        await _dispatcher!.HandleEventAsync(mailEvent);
 
-        _mockProvider.Verify(
+        _mockProvider!.Verify(
             p => p.SendEmailAsync(It.Is<SendMailEvent>(e => e.MessageId == mailEvent.MessageId), It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -59,13 +59,13 @@ public class MailEventDispatcherTests
             UserMailAccountId = Guid.NewGuid()
         };
 
-        _mockFactory.Setup(f => f.GetProvider(ProviderType.Outlook)).Returns(_mockProvider.Object);
-        _mockProvider.Setup(p => p.ReadInboxAsync(It.IsAny<ReadInboxEvent>(), It.IsAny<CancellationToken>()))
+        _mockFactory!.Setup(f => f.GetProvider(ProviderType.Outlook)).Returns(_mockProvider!.Object);
+        _mockProvider!.Setup(p => p.ReadInboxAsync(It.IsAny<ReadInboxEvent>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        await _dispatcher.HandleEventAsync(mailEvent);
+        await _dispatcher!.HandleEventAsync(mailEvent);
 
-        _mockProvider.Verify(
+        _mockProvider!.Verify(
             p => p.ReadInboxAsync(It.Is<ReadInboxEvent>(e => e.MessageId == mailEvent.MessageId), It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -82,8 +82,8 @@ public class MailEventDispatcherTests
             UserMailAccountId = Guid.NewGuid()
         };
 
-        _mockFactory.Setup(f => f.GetProvider(ProviderType.Gmail)).Returns(_mockProvider.Object);
-        await _dispatcher.HandleEventAsync(unsupportedEvent);
+        _mockFactory!.Setup(f => f.GetProvider(ProviderType.Gmail)).Returns(_mockProvider!.Object);
+        await _dispatcher!.HandleEventAsync(unsupportedEvent);
     }
 
     private class UnsupportedMailEvent : MailEvent { }

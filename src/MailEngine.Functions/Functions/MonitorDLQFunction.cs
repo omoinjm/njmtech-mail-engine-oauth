@@ -27,7 +27,7 @@ public class MonitorDLQFunction
     {
         try
         {
-            _logger.LogInformation("DLQ Monitor: Starting check. NextExecution: {NextExecution}", timerInfo.ScheduleStatus.Next);
+            _logger.LogInformation("DLQ Monitor: Starting check. NextExecution: {NextExecution}", timerInfo.ScheduleStatus?.Next);
 
             // Count messages currently in DLQ (in database)
             var dlqMessages = _dbContext.FailedMessages

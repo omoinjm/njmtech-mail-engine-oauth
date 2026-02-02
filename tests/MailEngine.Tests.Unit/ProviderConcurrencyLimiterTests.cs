@@ -7,7 +7,7 @@ namespace MailEngine.Tests.Unit;
 [TestClass]
 public class ProviderConcurrencyLimiterTests
 {
-    private ProviderConcurrencyLimiter _limiter;
+    private ProviderConcurrencyLimiter? _limiter;
 
     [TestInitialize]
     public void Setup()
@@ -25,8 +25,8 @@ public class ProviderConcurrencyLimiterTests
         {
             tasks.Add(Task.Run(async () =>
             {
-                await _limiter.WaitAsync(providerType);
-                _limiter.Release(providerType);
+                await _limiter!.WaitAsync(providerType);
+                _limiter!.Release(providerType);
             }));
         }
 
@@ -48,10 +48,10 @@ public class ProviderConcurrencyLimiterTests
             {
                 try
                 {
-                    await _limiter.WaitAsync(providerType, cts.Token);
+                    await _limiter!.WaitAsync(providerType, cts.Token);
                     Interlocked.Increment(ref completedCount);
                     await Task.Delay(100, cts.Token);
-                    _limiter.Release(providerType);
+                    _limiter!.Release(providerType);
                     Interlocked.Decrement(ref completedCount);
                 }
                 catch (OperationCanceledException)
@@ -71,17 +71,17 @@ public class ProviderConcurrencyLimiterTests
         var providerType = ProviderType.Gmail;
         var releaseCount = 0;
 
-        await _limiter.WaitAsync(providerType);
+        await _limiter!.WaitAsync(providerType);
         
         var waitTask = Task.Run(async () =>
         {
-            await _limiter.WaitAsync(providerType);
+            await _limiter!.WaitAsync(providerType);
             Interlocked.Increment(ref releaseCount);
-            _limiter.Release(providerType);
+            _limiter!.Release(providerType);
         });
 
         await Task.Delay(100);
-        _limiter.Release(providerType);
+        _limiter!.Release(providerType);
         await waitTask;
 
         Assert.AreEqual(1, releaseCount, "Wait task should have completed after release");
