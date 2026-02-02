@@ -39,13 +39,13 @@ public class FailedMessageLogger : IFailedMessageLogger
         {
             var failedMessage = new FailedMessage
             {
-                Topic = topic,
-                Subscription = subscription,
-                ErrorMessage = exception.Message,
-                ErrorStackTrace = exception.StackTrace ?? string.Empty,
-                MessageContent = messageContent,
-                Status = "in-dlq",
-                RetryCount = 0,
+                TopicCd = topic,
+                SubscriptionTxt = subscription,
+                ErrorMessageTxt = exception.Message,
+                ErrorStackTraceTxt = exception.StackTrace ?? string.Empty,
+                MessageContentTxt = messageContent,
+                StatusCd = "in-dlq",
+                RetryCountNo = 0,
                 FailedAtUtc = DateTime.UtcNow
             };
 

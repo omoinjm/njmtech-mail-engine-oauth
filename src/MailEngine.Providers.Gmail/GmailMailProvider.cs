@@ -27,7 +27,7 @@ public class GmailMailProvider : IMailProvider
         try
         {
             var token = await GetAndRefreshTokenIfNeeded(mailEvent.UserMailAccountId, cancellationToken);
-            var service = CreateGmailService(token.AccessToken);
+            var service = CreateGmailService(token.AccessTokenTxt);
 
             var message = new Message
             {
@@ -49,7 +49,7 @@ public class GmailMailProvider : IMailProvider
         try
         {
             var token = await GetAndRefreshTokenIfNeeded(inboxEvent.UserMailAccountId, cancellationToken);
-            var service = CreateGmailService(token.AccessToken);
+            var service = CreateGmailService(token.AccessTokenTxt);
 
             // Fetch recent messages from inbox
             var request = service.Users.Messages.List("me");

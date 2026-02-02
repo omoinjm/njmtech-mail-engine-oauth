@@ -2,15 +2,17 @@ namespace MailEngine.Core.Models;
 
 public class FailedMessage
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public Guid MessageId { get; set; }
-    public string Topic { get; set; }
-    public string Subscription { get; set; }
-    public string ErrorMessage { get; set; }
-    public string ErrorStackTrace { get; set; }
+    public Guid FailedMessageId { get; set; } = Guid.NewGuid();
+    public string MessageIdTxt { get; set; }
+    public string TopicCd { get; set; }
+    public string SubscriptionTxt { get; set; }
+    public string ErrorMessageTxt { get; set; }
+    public string ErrorStackTraceTxt { get; set; }
     public DateTime FailedAtUtc { get; set; } = DateTime.UtcNow;
-    public string Status { get; set; } = "in-dlq"; // in-dlq, manual-retry-pending, resolved
-    public int RetryCount { get; set; } = 0;
+    public string StatusCd { get; set; } = "in-dlq"; // in-dlq, manual-retry-pending, resolved
+    public int RetryCountNo { get; set; } = 0;
     public DateTime? ResolvedAtUtc { get; set; }
-    public string MessageContent { get; set; } // Store the full message for retry
+    public string MessageContentTxt { get; set; } // Store the full message for retry
+    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+    public DateTime ModifiedAtUtc { get; set; } = DateTime.UtcNow;
 }

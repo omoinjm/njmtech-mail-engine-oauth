@@ -31,7 +31,7 @@ public class MonitorDLQFunction
 
             // Count messages currently in DLQ (in database)
             var dlqMessages = _dbContext.FailedMessages
-                .Where(f => f.Status == "in-dlq")
+                .Where(f => f.StatusCd == "in-dlq")
                 .ToList();
 
             if (dlqMessages.Count > 0)
@@ -39,7 +39,7 @@ public class MonitorDLQFunction
                 _logger.LogError("DLQ ALERT: {Count} messages in Dead Letter Queue requiring investigation", dlqMessages.Count);
 
                 // Log summary of failures by topic
-                var byTopic = dlqMessages.GroupBy(m => m.Topic);
+                var byTopic = dlqMessages.GroupBy(m => m.TopicCd);
                 foreach (var topicGroup in byTopic)
                 {
                     _logger.LogError("  Topic: {Topic} - {Count} failed messages", topicGroup.Key, topicGroup.Count());
@@ -47,7 +47,7 @@ public class MonitorDLQFunction
                     // Log the most recent failure for each topic
                     var mostRecent = topicGroup.OrderByDescending(m => m.FailedAtUtc).First();
                     _logger.LogError("    Most recent: {ErrorMessage} at {FailedAt}",
-                        mostRecent.ErrorMessage,
+                        mostRecent.ErrorMessageTxt,
                         mostRecent.FailedAtUtc);
                 }
 

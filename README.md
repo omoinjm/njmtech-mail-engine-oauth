@@ -333,24 +333,50 @@ Mail Engine uses **manual migrations** (Option B) for safety:
 | **Staging** | GitHub Actions auto-generates & auto-applies | Automated, no approval |
 | **Production** | GitHub Actions generates, you apply manually | Safe, reviewed |
 
+### Initial Database Schema
+
+The **InitialCreate** migration creates three core tables:
+
+**1. OAuthTokens** (Credentials Storage)
+- `Id` (UUID) - Primary key
+- `UserMailAccountId` (UUID) - Link to user account
+- `AccessToken` (Text) - API access token for Gmail/Outlook
+- `RefreshToken` (Text) - Token to refresh access token
+- `ExpiresAtUtc` (DateTime) - Expiration timestamp
+
+**2. UserMailAccounts** (User Information)
+- `Id` (UUID) - Primary key
+- `EmailAddress` (Text) - User's email address
+- `ProviderType` (Integer) - 0=Gmail, 1=Outlook
+
+**3. FailedMessages** (Error Tracking)
+- `Id`, `MessageId`, `Topic`, `Subscription`
+- `ErrorMessage`, `ErrorStackTrace` - Error details
+- `FailedAtUtc`, `ResolvedAtUtc` - Timestamps
+- `Status`, `RetryCount` - Tracking info
+- Indexes on `Status` and `Topic` for fast queries
+
 ### Quick Migration Commands
 
 ```bash
-# Create a new migration
+# View migration history
+dotnet ef migrations list
+
+# Create a new migration (after schema changes)
 ./generate-migration.sh "AddUserColumn"
 
 # Apply migrations locally
 cd src/MailEngine.Infrastructure
 dotnet ef database update --startup-project ../MailEngine.Functions
 
-# View migration history
-dotnet ef migrations list
-
 # Rollback to previous migration
 dotnet ef database update "PreviousMigrationName" --startup-project ../MailEngine.Functions
 
 # Generate SQL script for review
 dotnet ef migrations script --output migration.sql --idempotent
+
+# Check migration status
+dotnet ef migrations list --startup-project ../MailEngine.Functions
 ```
 
 ### Error Handling & Monitoring
