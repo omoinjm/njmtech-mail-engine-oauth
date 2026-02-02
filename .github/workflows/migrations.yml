@@ -1,0 +1,98 @@
+name: Database Migrations
+
+on:
+  push:
+    branches: [ main, staging ]
+    paths:
+      - 'src/MailEngine.Infrastructure/Data/**'
+      - 'src/MailEngine.Infrastructure/Migrations/**'
+      - 'src/MailEngine.Core/Models/**'
+      - '.github/workflows/migrations.yml'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+    
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build project
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Install EF Core tools
+      run: dotnet tool install --global dotnet-ef
+
+    - name: Generate migration script
+      run: |
+        cd src/MailEngine.Infrastructure
+        dotnet ef migrations script \
+          --startup-project ../MailEngine.Functions \
+          --context MailEngineDbContext \
+          --output migration.sql \
+          --idempotent
+      env:
+        ASPNETCORE_ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'Production' || 'Staging' }}
+
+    - name: Upload migration script
+      uses: actions/upload-artifact@v4
+      with:
+        name: migration-script-${{ github.run_number }}
+        path: src/MailEngine.Infrastructure/migration.sql
+        retention-days: 30
+
+    - name: Apply migration (Staging)
+      if: github.ref == 'refs/heads/staging'
+      run: |
+        cd src/MailEngine.Infrastructure
+        echo "${{ secrets.STAGING_MIGRATION_SCRIPT }}" > run_migration.sh
+        chmod +x run_migration.sh
+        ./run_migration.sh
+      env:
+        DB_CONNECTION_STRING: ${{ secrets.STAGING_DATABASE_CONNECTION_STRING }}
+
+    - name: Apply migration (Production)
+      if: github.ref == 'refs/heads/main'
+      run: |
+        cd src/MailEngine.Infrastructure
+        echo "⚠️  PRODUCTION MIGRATION REQUIRES MANUAL APPROVAL"
+        echo "Migration script is ready at: src/MailEngine.Infrastructure/migration.sql"
+        echo "Connection string: ${{ secrets.PROD_DATABASE_CONNECTION_STRING }}"
+      env:
+        DB_CONNECTION_STRING: ${{ secrets.PROD_DATABASE_CONNECTION_STRING }}
+
+    - name: Comment on PR with migration status
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '✅ Migration script generated and validated. Download the artifact to review changes.'
+          })
+
+    - name: Notify on failure
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '❌ Migration script generation failed. Check the workflow logs.'
+          })

@@ -1,70 +1,52 @@
-using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Builder;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
-using MailEngine.Core.Interfaces;
 using MailEngine.Infrastructure.Data;
-using MailEngine.Infrastructure.ServiceBus;
-using MailEngine.Infrastructure.KeyVault;
-using MailEngine.Infrastructure.Factories;
+using MailEngine.Core.Interfaces;
 using MailEngine.Functions.Dispatching;
-using MailEngine.Providers.Gmail;
-using MailEngine.Providers.Outlook;
+using MailEngine.Functions.Services;
 using MailEngine.Functions.Webhooks;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
 builder.ConfigureFunctionsWebApplication();
 
-// Add configuration
-builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
-builder.Configuration.AddEnvironmentVariables();
-
+// Load configuration
 var config = builder.Configuration;
 
-// Add logging with Application Insights
-builder.Services
-    .AddApplicationInsightsTelemetryWorkerService()
-    .ConfigureFunctionsApplicationInsights();
+// Logging
+builder.Services.AddLogging();
 
-// Add DbContext
-var dbConnectionString = config["Database:ConnectionString"] ?? "Server=.;Database=MailEngine;Integrated Security=true;";
-builder.Services.AddDbContext<MailEngineDbContext>(options =>
-{
-    options.UseSqlServer(dbConnectionString);
-});
+// Database context
+var connectionString = config.GetConnectionString("DefaultConnection");
+var dbProvider = config.GetValue<string>("DatabaseProvider") ?? "PostgreSQL";
 
-// Add Key Vault
-var keyVaultUri = config["KeyVault:Uri"];
-if (!string.IsNullOrEmpty(keyVaultUri))
+if (!string.IsNullOrEmpty(connectionString))
 {
-    builder.Services.AddSingleton<IKeyVaultSecretProvider>(sp =>
-        new KeyVaultSecretProvider(keyVaultUri, sp.GetRequiredService<ILogger<KeyVaultSecretProvider>>()));
+    builder.Services.AddDbContext<MailEngineDbContext>(options =>
+    {
+        if (dbProvider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase))
+        {
+            options.UseNpgsql(connectionString);
+        }
+        else
+        {
+            options.UseSqlServer(connectionString);
+        }
+    });
 }
 
-// Add Service Bus
-var serviceBusConnectionString = config["AzureServiceBus:ConnectionString"] ?? "Endpoint=sb://localhost/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_HERE";
-builder.Services.AddSingleton(new ServiceBusPublisher(serviceBusConnectionString));
+// Concurrency limiter
+builder.Services.AddSingleton<ProviderConcurrencyLimiter>(
+    new ProviderConcurrencyLimiter(maxConcurrencyPerProvider: 10));
 
-// Add concurrency limiter
-var maxConcurrency = config.GetValue<int>("Providers:Concurrency:MaxPerProvider", 10);
-builder.Services.AddSingleton(new ProviderConcurrencyLimiter(maxConcurrency));
-
-// Add mail providers
-builder.Services.AddScoped<GmailMailProvider>();
-builder.Services.AddScoped<OutlookMailProvider>();
-
-// Add factory
-builder.Services.AddScoped<IMailProviderFactory, MailProviderFactory>();
-
-// Add event handler
+// Services
 builder.Services.AddScoped<IMailEventHandler, MailEventDispatcher>();
-
-// Add webhook validator
+builder.Services.AddScoped<IFailedMessageLogger, FailedMessageLogger>();
 builder.Services.AddScoped<IWebhookValidator, WebhookValidator>();
 
 builder.Build().Run();
+
+

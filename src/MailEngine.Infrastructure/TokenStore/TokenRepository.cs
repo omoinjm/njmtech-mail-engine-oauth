@@ -25,9 +25,10 @@ public class TokenRepository : ITokenRepository
         var existingToken = await GetTokenAsync(token.UserMailAccountId, cancellationToken);
         if (existingToken != null)
         {
-            existingToken.AccessToken = token.AccessToken;
-            existingToken.RefreshToken = token.RefreshToken;
+            existingToken.AccessTokenTxt = token.AccessTokenTxt;
+            existingToken.RefreshTokenTxt = token.RefreshTokenTxt;
             existingToken.ExpiresAtUtc = token.ExpiresAtUtc;
+            existingToken.ModifiedAtUtc = DateTime.UtcNow;
             _context.OAuthTokens.Update(existingToken);
         }
         else
