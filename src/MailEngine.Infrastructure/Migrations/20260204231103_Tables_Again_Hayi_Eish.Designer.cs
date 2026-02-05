@@ -3,6 +3,7 @@ using System;
 using MailEngine.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MailEngine.Infrastructure.Migrations
 {
     [DbContext(typeof(MailEngineDbContext))]
-    partial class MailEngineDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260204231103_Tables_Again_Hayi_Eish")]
+    partial class Tables_Again_Hayi_Eish
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -37,6 +37,13 @@ public class ReadInboxFunction
                 throw new InvalidOperationException("Invalid ReadInboxEvent format");
             }
 
+            // Generate idempotency key based on message content if not already present
+            if (string.IsNullOrEmpty(mailEvent.IdempotencyKey))
+            {
+                // Create idempotency key based on user account to prevent duplicate inbox reads
+                mailEvent.IdempotencyKey = $"readinbox_{mailEvent.UserMailAccountId}_{DateTime.UtcNow:yyyyMMddHH}";
+            }
+
             await _eventHandler.HandleEventAsync(mailEvent, cancellationToken);
             _logger.LogInformation("ReadInbox event processed successfully. CorrelationId: {CorrelationId}", correlationId);
         }

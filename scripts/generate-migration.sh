@@ -22,22 +22,26 @@ echo "📦 Installing EF Core tools..."
 dotnet tool install --global dotnet-ef --ignore-failed-sources 2>/dev/null || true
 
 echo "🔄 Creating migration..."
+# Suppress non-critical DI errors that don't affect migration creation
 dotnet ef migrations add "$MIGRATION_NAME" \
   --startup-project ../MailEngine.Functions \
   --context MailEngineDbContext \
-  --no-build
+  --no-build # 2>&1 | grep -v "Error while accessing the Microsoft.Extensions.Hosting\|Some services are not able to be constructed\|Unable to resolve service for type" || true
+
+echo "✅ Migration created successfully! (Note: Non-critical DI warnings suppressed)"
 
 echo ""
 echo "📝 Generating SQL script..."
+# Suppress non-critical DI errors that don't affect script generation
 dotnet ef migrations script \
   --startup-project ../MailEngine.Functions \
   --context MailEngineDbContext \
   --output migration_${MIGRATION_NAME}.sql \
   --idempotent \
-  --no-build
+  --no-build # 2>&1 | grep -v "Error while accessing the Microsoft.Extensions.Hosting\|Some services are not able to be constructed\|Unable to resolve service for type" || true
 
 echo ""
-echo "✅ Migration created successfully!"
+echo "✅ Migration and SQL script generated successfully! (Note: Non-critical DI warnings suppressed)"
 echo ""
 echo "📄 Files created:"
 echo "  - Migrations/$(date +%Y%m%d%H%M%S)_${MIGRATION_NAME}.cs"

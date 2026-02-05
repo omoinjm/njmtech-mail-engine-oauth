@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using MailEngine.Infrastructure.Data;
 using MailEngine.Infrastructure.Factories;
 using MailEngine.Infrastructure.TokenStore;
+using MailEngine.Infrastructure.Services;
 using MailEngine.Core.Interfaces;
 using MailEngine.Functions.Dispatching;
 using MailEngine.Functions.Services;
@@ -15,6 +16,11 @@ using MailEngine.Providers.Gmail;
 using MailEngine.Providers.Outlook;
 
 var builder = FunctionsApplication.CreateBuilder(args);
+
+// Add this line to ensure local.settings.json is loaded
+builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
 
 builder.ConfigureFunctionsWebApplication();
 
@@ -68,7 +74,16 @@ builder.Services.AddSingleton<ProviderConcurrencyLimiter>(
     new ProviderConcurrencyLimiter(maxConcurrencyPerProvider: 10));
 
 // Core Services
-builder.Services.AddScoped<IMailEventHandler, MailEventDispatcher>();
+builder.Services.AddScoped<IMailEventDispatcher, MailEventDispatcher>(); // Register original dispatcher
+builder.Services.AddScoped<IDuplicateTracker, DuplicateTracker>();
+builder.Services.AddScoped<IMailEventHandler>(serviceProvider =>
+{
+    var dispatcher = serviceProvider.GetRequiredService<IMailEventDispatcher>();
+    var duplicateTracker = serviceProvider.GetRequiredService<IDuplicateTracker>();
+    var dbContext = serviceProvider.GetRequiredService<MailEngineDbContext>();
+    var logger = serviceProvider.GetRequiredService<ILogger<DeduplicatedMailEventHandler>>();
+    return new DeduplicatedMailEventHandler(dispatcher, duplicateTracker, dbContext, logger);
+});
 builder.Services.AddScoped<IFailedMessageLogger, FailedMessageLogger>();
 builder.Services.AddScoped<IWebhookValidator, WebhookValidator>();
 
