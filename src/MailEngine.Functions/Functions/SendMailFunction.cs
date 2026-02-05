@@ -37,6 +37,14 @@ public class SendMailFunction
                 throw new InvalidOperationException("Invalid SendMailEvent format");
             }
 
+            // Generate idempotency key based on message content if not already present
+            if (string.IsNullOrEmpty(mailEvent.IdempotencyKey))
+            {
+                // Create idempotency key based on recipient, subject, and body to prevent duplicate sends
+                var contentHash = ComputeSha256Hash($"{mailEvent.To}|{mailEvent.Subject}|{mailEvent.Body}");
+                mailEvent.IdempotencyKey = $"sendmail_{contentHash}";
+            }
+
             await _eventHandler.HandleEventAsync(mailEvent, cancellationToken);
             _logger.LogInformation("SendMail event processed successfully. CorrelationId: {CorrelationId}", correlationId);
         }
@@ -80,6 +88,23 @@ public class SendMailFunction
             // UNKNOWN: Log full details for investigation
             _logger.LogError(ex, "Error processing SendMail event. Error type: {ExceptionType}", ex.GetType().Name);
             throw;
+        }
+    }
+
+    private static string ComputeSha256Hash(string rawData)
+    {
+        using (var sha256Hash = System.Security.Cryptography.SHA256.Create())
+        {
+            // ComputeHash - returns byte array
+            var bytes = sha256Hash.ComputeHash(System.Text.Encoding.UTF8.GetBytes(rawData));
+
+            // Convert byte array to a string
+            var builder = new System.Text.StringBuilder();
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                builder.Append(bytes[i].ToString("x2"));
+            }
+            return builder.ToString();
         }
     }
 }

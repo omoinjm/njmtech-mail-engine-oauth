@@ -1,10 +1,9 @@
 using MailEngine.Core.Interfaces;
 using MailEngine.Core.Models;
-using MailEngine.Functions.Dispatching;
 
 namespace MailEngine.Functions.Dispatching;
 
-public class MailEventDispatcher : IMailEventHandler
+public class MailEventDispatcher : IMailEventDispatcher
 {
     private readonly IMailProviderFactory _mailProviderFactory;
     private readonly ProviderConcurrencyLimiter _concurrencyLimiter;

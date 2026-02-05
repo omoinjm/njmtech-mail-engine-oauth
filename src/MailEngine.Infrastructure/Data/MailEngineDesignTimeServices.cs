@@ -1,28 +1,35 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.DependencyInjection;
-using System.Text.Json;
+using Microsoft.Extensions.Hosting;
 
 namespace MailEngine.Infrastructure.Data;
 
-public class MailEngineDbContextFactory : IDesignTimeDbContextFactory<MailEngineDbContext>
+// This class is used by EF Core tools during design time operations (migrations)
+public class MailEngineDesignTimeServices : IServiceProvider
 {
-    public MailEngineDbContext CreateDbContext(string[] args)
+    private readonly ServiceProvider _serviceProvider;
+
+    public MailEngineDesignTimeServices()
     {
-        // Try to read from environment variables or local.settings.json
+        var services = new ServiceCollection();
+        
+        // Add only the minimum required services for migrations
         var connectionString = GetConnectionString();
+        services.AddDbContext<MailEngineDbContext>(options =>
+            options.UseNpgsql(connectionString));
+        
+        _serviceProvider = services.BuildServiceProvider();
+    }
 
-        var optionsBuilder = new DbContextOptionsBuilder<MailEngineDbContext>();
-        optionsBuilder.UseNpgsql(connectionString);
-
-        return new MailEngineDbContext(optionsBuilder.Options);
+    public object GetService(Type serviceType)
+    {
+        return _serviceProvider.GetService(serviceType);
     }
 
     private static string GetConnectionString()
     {
         // Try multiple sources for connection string
-
-        // 1. Check environment variables first
         var envConnectionString =
             Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection") ??
             Environment.GetEnvironmentVariable("ConnectionStrings__DATABASE_CONNECTION_STRING") ??
@@ -35,10 +42,10 @@ public class MailEngineDbContextFactory : IDesignTimeDbContextFactory<MailEngine
             return envConnectionString;
         }
 
-        // 2. Try to read from local.settings.json
+        // Try to read from local.settings.json
         var settingsPath = Path.Combine(
             Directory.GetCurrentDirectory(),
-            "..", "MailEngine.Functions", // Updated path to be relative to Infrastructure project
+            "..", "MailEngine.Functions",
             "local.settings.json"
         );
 
@@ -46,19 +53,17 @@ public class MailEngineDbContextFactory : IDesignTimeDbContextFactory<MailEngine
         {
             try
             {
-                var json = File.ReadAllText(settingsPath);
-                using (var doc = JsonDocument.Parse(json))
+                using var file = File.OpenRead(settingsPath);
+                using var jsonDoc = System.Text.Json.JsonDocument.Parse(file);
+                if (jsonDoc.RootElement.TryGetProperty("ConnectionStrings", out var connectionStrings))
                 {
-                    if (doc.RootElement.TryGetProperty("ConnectionStrings", out var connectionStrings))
+                    if (connectionStrings.TryGetProperty("DefaultConnection", out var defaultConnection))
                     {
-                        if (connectionStrings.TryGetProperty("DefaultConnection", out var defaultConnection))
+                        var connString = defaultConnection.GetString();
+                        if (!string.IsNullOrEmpty(connString))
                         {
-                            var connString = defaultConnection.GetString();
-                            if (!string.IsNullOrEmpty(connString))
-                            {
-                                Console.WriteLine($"✅ Using connection string from local.settings.json");
-                                return connString;
-                            }
+                            Console.WriteLine($"✅ Using connection string from local.settings.json");
+                            return connString;
                         }
                     }
                 }
@@ -69,7 +74,7 @@ public class MailEngineDbContextFactory : IDesignTimeDbContextFactory<MailEngine
             }
         }
 
-        // 3. Fallback to default localhost
+        // Fallback to default localhost
         var defaultConnectionString = "Host=localhost;Port=5432;Database=mail_engine_dev;Username=postgres;Password=postgres";
         Console.WriteLine($"⚠️  Using fallback connection string (localhost)");
         return defaultConnectionString;

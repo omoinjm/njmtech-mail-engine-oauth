@@ -13,6 +13,7 @@ public class MailEngineDbContext : DbContext
     public DbSet<OAuthToken> OAuthTokens { get; set; }
     public DbSet<UserMailAccount> UserMailAccounts { get; set; }
     public DbSet<FailedMessage> FailedMessages { get; set; }
+    public DbSet<ProcessedMessage> ProcessedMessages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -153,5 +154,54 @@ public class MailEngineDbContext : DbContext
         modelBuilder.Entity<FailedMessage>()
             .HasIndex(f => f.CreatedAtUtc)
             .HasDatabaseName("idx_failed_messages_created_at_utc");
+
+        // ProcessedMessages configuration
+        modelBuilder.Entity<ProcessedMessage>()
+            .ToTable("processed_messages")
+            .HasKey(p => p.ProcessedMessageId);
+
+        modelBuilder.Entity<ProcessedMessage>()
+            .Property(p => p.ProcessedMessageId)
+            .HasColumnName("processed_message_id")
+            .HasDefaultValueSql("gen_random_uuid()");
+
+        modelBuilder.Entity<ProcessedMessage>()
+            .Property(p => p.MessageId)
+            .HasColumnName("message_id")
+            .IsRequired();
+
+        modelBuilder.Entity<ProcessedMessage>()
+            .Property(p => p.IdempotencyKey)
+            .HasColumnName("idempotency_key");
+
+        modelBuilder.Entity<ProcessedMessage>()
+            .Property(p => p.EventType)
+            .HasColumnName("event_type")
+            .IsRequired();
+
+        modelBuilder.Entity<ProcessedMessage>()
+            .Property(p => p.ProcessedAt)
+            .HasColumnName("processed_at");
+
+        modelBuilder.Entity<ProcessedMessage>()
+            .Property(p => p.CreatedAt)
+            .HasColumnName("created_at");
+
+        // Add indexes for performance
+        modelBuilder.Entity<ProcessedMessage>()
+            .HasIndex(p => p.MessageId)
+            .HasDatabaseName("idx_processed_messages_message_id");
+
+        modelBuilder.Entity<ProcessedMessage>()
+            .HasIndex(p => p.IdempotencyKey)
+            .HasDatabaseName("idx_processed_messages_idempotency_key");
+
+        modelBuilder.Entity<ProcessedMessage>()
+            .HasIndex(p => p.EventType)
+            .HasDatabaseName("idx_processed_messages_event_type");
+
+        modelBuilder.Entity<ProcessedMessage>()
+            .HasIndex(p => p.ProcessedAt)
+            .HasDatabaseName("idx_processed_messages_processed_at");
     }
 }

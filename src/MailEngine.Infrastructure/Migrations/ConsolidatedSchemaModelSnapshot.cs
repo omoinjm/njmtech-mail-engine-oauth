@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MailEngine.Infrastructure.Migrations
 {
     [DbContext(typeof(MailEngineDbContext))]
-    partial class MailEngineDbContextModelSnapshot : ModelSnapshot
+    partial class ConsolidatedSchemaModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
